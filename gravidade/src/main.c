@@ -15,7 +15,7 @@ void iniciar_jogador(jogador *p) {
     p->largura = 50.0f;
     p->altura = 40.0f;
 
-    p->posicao.x = LARGURA / 2.0f - p->largura / 2.0f;
+    p->posicao.x = 150.0f;
     p->posicao.y = ALTURA / 2.0f;
     p->velocidade_y = 0.0f;
     p->gravidade = 0.4f;
