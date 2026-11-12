@@ -1,18 +1,22 @@
 #include "raylib.h"
 #include <stdlib.h>
 
+// Configurações da tela do jogo
 #define LARGURA 800
 #define ALTURA 600
 #define CHAO ALTURA
 
+// Tamanho e espaçamento das algas (obstáculos)
 #define LARG_ALGA 60.0f
 #define ESPACO_ALGAS 300.0f
 
+// Parâmetros de dificuldade e progressão
 #define VEL_INICIAL 3.0f
 #define VEL_MAX 7.5f
 #define ABERTURA_INICIAL 210.0f
 #define ABERTURA_MIN 140.0f
 
+// Estrutura do jogador (o polvo)
 typedef struct {
     Vector2 posicao;
     float velocidade_y;
@@ -22,6 +26,7 @@ typedef struct {
     float altura;
 } jogador;
 
+// Estrutura de cada alga usando lista encadeada
 typedef struct alga {
     float x;
     float abertura_y;
@@ -30,6 +35,7 @@ typedef struct alga {
     struct alga *proximo;
 } alga;
 
+// Estrutura principal que gerencia o estado da partida
 typedef struct {
     alga *algas;
     int pontos;
@@ -37,14 +43,16 @@ typedef struct {
     float abertura;
 } jogo;
 
-/* ---------- jogador ---------- */
+/* ---------- FUNÇÕES DO JOGADOR ---------- */
 
+// Reseta a posição do polvo para o meio da tela
 void resetar_jogador(jogador *p) {
     p->posicao.x = 150.0f;
     p->posicao.y = CHAO / 2.0f;
     p->velocidade_y = 0.0f;
 }
 
+// Configura os valores iniciais de física do polvo
 void iniciar_jogador(jogador *p) {
     p->gravidade = 0.4f;
     p->pulo = -7.5f;
@@ -54,6 +62,7 @@ void iniciar_jogador(jogador *p) {
     resetar_jogador(p);
 }
 
+// Atualiza a gravidade e o pulo do polvo a cada frame
 void atualizar_jogador(jogador *p, int pulou) {
     if (pulou) {
         p->velocidade_y = p->pulo;
@@ -63,6 +72,7 @@ void atualizar_jogador(jogador *p, int pulou) {
     p->posicao.y += p->velocidade_y;
 }
 
+// Cria uma caixa de colisão levemente menor que o polvo para o jogo ser mais justo
 Rectangle hitbox_jogador(jogador *p) {
     Rectangle r = {
         p->posicao.x + 10.0f,
@@ -74,13 +84,15 @@ Rectangle hitbox_jogador(jogador *p) {
     return r;
 }
 
+// Desenha o polvo na tela
 void desenhar_jogador(jogador *p) {
     DrawRectangle((int)p->posicao.x, (int)p->posicao.y,
                   (int)p->largura, (int)p->altura, ORANGE);
 }
 
-/* ---------- algas (lista encadeada) ---------- */
+/* ---------- FUNÇÕES DAS ALGAS ---------- */
 
+// Acha a última alga da lista encadeada para sabermos onde posicionar a próxima
 alga *ultima_alga(alga *cabeca) {
     if (cabeca == NULL) return NULL;
 
@@ -91,9 +103,9 @@ alga *ultima_alga(alga *cabeca) {
     return cabeca;
 }
 
+// Cria e adiciona um novo obstáculo de algas no cenário
 alga *adicionar_alga(jogo *j, float x) {
     alga *nova = (alga *)malloc(sizeof(alga));
-
     if (nova == NULL) return NULL;
 
     float min_y = 70.0f;
@@ -126,6 +138,7 @@ alga *adicionar_alga(jogo *j, float x) {
     return nova;
 }
 
+// Limpa toda a memória das algas ao reiniciar ou fechar o jogo
 void liberar_algas(jogo *j) {
     alga *atual = j->algas;
 
@@ -138,6 +151,7 @@ void liberar_algas(jogo *j) {
     j->algas = NULL;
 }
 
+// Move as algas para a esquerda e recicla as que saem da tela
 void atualizar_algas(jogo *j) {
     alga *a;
 
@@ -145,6 +159,7 @@ void atualizar_algas(jogo *j) {
         a->x -= j->velocidade;
     }
 
+    // Remove algas antigas da memória quando saem da tela
     while (j->algas != NULL && j->algas->x + LARG_ALGA < 0) {
         alga *remover = j->algas;
         j->algas = remover->proximo;
@@ -163,13 +178,13 @@ void atualizar_algas(jogo *j) {
         }
 
         alga *nova = adicionar_alga(j, x);
-
         if (nova == NULL) break;
 
         ultima = nova;
     }
 }
 
+// Desenha a parte de cima e de baixo de cada alga
 void desenhar_algas(jogo *j) {
     alga *a;
 
@@ -181,7 +196,7 @@ void desenhar_algas(jogo *j) {
     }
 }
 
-/* ---------- jogo ---------- */
+/* ---------- LÓGICA DO JOGO ---------- */
 
 void iniciar_jogo(jogo *j) {
     j->algas = NULL;
@@ -191,6 +206,7 @@ void fim_de_jogo(jogo *j) {
     liberar_algas(j);
 }
 
+// Reseta pontuação, velocidade e reinicia a partida
 void resetar_jogo(jogo *j, jogador *p) {
     liberar_algas(j);
 
@@ -202,6 +218,7 @@ void resetar_jogo(jogo *j, jogador *p) {
     atualizar_algas(j);
 }
 
+// Verifica se o polvo bateu em alguma alga
 int colidir(jogo *j, Rectangle hit) {
     alga *a;
 
@@ -212,32 +229,34 @@ int colidir(jogo *j, Rectangle hit) {
         Rectangle baixo = { a->x, base, LARG_ALGA, CHAO - base };
 
         if (CheckCollisionRecs(hit, cima) || CheckCollisionRecs(hit, baixo)) {
-            return 1;
+            return 1; // Colidiu
         }
     }
 
-    return 0;
+    return 0; // Sem colisão
 }
 
+// Atualiza a lógica de pontuação, dificuldade progressiva e colisões a cada frame
 int atualizar_jogo(jogo *j, jogador *p, int pulou) {
     alga *a;
 
     atualizar_jogador(p, pulou);
     atualizar_algas(j);
 
+    // Sistema de pontuação e aumento progressivo da dificuldade
     for (a = j->algas; a != NULL; a = a->proximo) {
         if (!a->pontuada && a->x + LARG_ALGA < p->posicao.x) {
             a->pontuada = 1;
             j->pontos++;
 
+            // Fica mais rápido conforme ganha pontos
             j->velocidade = VEL_INICIAL + j->pontos * 0.2f;
-
             if (j->velocidade > VEL_MAX) {
                 j->velocidade = VEL_MAX;
             }
 
+            // O espaço entre as algas diminui para dificultar
             j->abertura = ABERTURA_INICIAL - j->pontos * 2.5f;
-
             if (j->abertura < ABERTURA_MIN) {
                 j->abertura = ABERTURA_MIN;
             }
@@ -246,12 +265,15 @@ int atualizar_jogo(jogo *j, jogador *p, int pulou) {
 
     Rectangle hit = hitbox_jogador(p);
 
+    // Morre se bater no chão ou no teto da tela
     if (hit.y < 0 || hit.y + hit.height > CHAO) {
         return 1;
     }
 
     return colidir(j, hit);
 }
+
+// --- FUNÇÃO PRINCIPAL ---
 
 int main(void) {
     InitWindow(LARGURA, ALTURA, "AquaDash");
@@ -266,6 +288,7 @@ int main(void) {
 
     int morreu = 0;
 
+    // Loop principal do jogo
     while (!WindowShouldClose()) {
         int pulou = IsKeyPressed(KEY_SPACE);
 
@@ -274,19 +297,23 @@ int main(void) {
                 morreu = 1;
             }
         } else {
+            // Se morreu, aguarda o jogador pressionar 'R' para reiniciar
             if (IsKeyPressed(KEY_R)) {
                 resetar_jogo(&partida, &polvo);
                 morreu = 0;
             }
         }
 
+        // Renderização gráfica
         BeginDrawing();
-            ClearBackground(BLUE);
+            ClearBackground(BLUE); // Fundo do oceano
             desenhar_algas(&partida);
             desenhar_jogador(&polvo);
 
+            // Exibe a pontuação na tela
             DrawText(TextFormat("Pontos: %d", partida.pontos), 20, 15, 30, WHITE);
 
+            // Mensagens de Game Over
             if (morreu) {
                 DrawText("GAME OVER", 280, 250, 50, RED);
                 DrawText("Pressione R para reiniciar", 270, 320, 22, DARKGRAY);
