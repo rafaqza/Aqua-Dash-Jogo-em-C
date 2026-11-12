@@ -3,7 +3,7 @@ CFLAGS = -Wall -Wextra -std=c99 -Isrc
 LIBS = -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
 
 TARGET = jogo
-SRCS = src/main.c
+SRCS = src/colisoes_pontuacao.c
 
 all:
 	$(CC) $(CFLAGS) $(SRCS) -o $(TARGET) $(LIBS)
