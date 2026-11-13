@@ -1,16 +1,15 @@
-/* programa de teste SO do ranking (nao usa raylib).
- * serve pra testar recordes.c antes de ligar no jogo. */
+/* Programa de teste do ranking (sem Raylib).
+ * Útil para testar recordes.c antes de integrar ao jogo. */
 #include <stdio.h>
 #include "recordes.h"
 
-void mostrar(int recordes[]) {
-    int i;
-
-    printf("--- TOP SCORES ---\n");
-
-    for (i = 0; i < MAX_RECORDES; i++) {
-        printf("%d. %d\n", i + 1, recordes[i]);
+// Exibe o ranking formatado
+void mostrar(const int recordes[]) {
+    printf("\n--- TOP SCORES ---\n");
+    for (int i = 0; i < MAX_RECORDES; i++) {
+        printf("%2d. %d\n", i + 1, recordes[i]);
     }
+    printf("------------------\n");
 }
 
 int main(void) {
@@ -18,20 +17,33 @@ int main(void) {
     int pontos;
 
     carregar_recordes(recordes);
-    mostrar(recordes);
 
-    printf("\ndigite uma pontuacao: ");
-    scanf("%d", &pontos);
+    printf("=== TESTE DO SISTEMA DE RECORDES ===\n");
 
-    if (entra_no_ranking(recordes, pontos)) {
-        inserir_recorde(recordes, pontos);
-        salvar_recordes(recordes);
-        printf("entrou no ranking!\n\n");
-    } else {
-        printf("nao entrou no ranking.\n\n");
+    // Loop para testar várias pontuações sem precisar reiniciar o programa
+    while (1) {
+        mostrar(recordes);
+
+        printf("\nDigite uma pontuacao (ou um valor negativo para sair): ");
+        if (scanf("%d", &pontos) != 1) {
+            printf("Entrada invalida. Encerrando...\n");
+            break;
+        }
+
+        if (pontos < 0) {
+            printf("Saindo do teste de recordes. Ate logo!\n");
+            break;
+        }
+
+        // Verifica, insere e salva se entrou no ranking
+        if (entra_no_ranking(recordes, pontos)) {
+            inserir_recorde(recordes, pontos);
+            salvar_recordes(recordes);
+            printf("\n[Sucesso] Entrou no ranking!\n");
+        } else {
+            printf("\n[Info] Nao entrou no ranking.\n");
+        }
     }
-
-    mostrar(recordes);
 
     return 0;
 }
