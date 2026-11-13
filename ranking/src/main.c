@@ -1,17 +1,17 @@
 #include "raylib.h"
 #include <stdlib.h>
 
-#define LARGURA 800
-#define ALTURA 600
-#define CHAO ALTURA
+#define LARGURA            800
+#define ALTURA             600
+#define CHAO               ALTURA
 
-#define LARG_ALGA 60.0f
-#define ESPACO_ALGAS 300.0f
+#define LARG_ALGA          60.0f
+#define ESPACO_ALGAS       300.0f
 
-#define VEL_INICIAL 3.0f
-#define VEL_MAX 7.5f
-#define ABERTURA_INICIAL 210.0f
-#define ABERTURA_MIN 140.0f
+#define VEL_INICIAL        3.0f
+#define VEL_MAX            7.5f
+#define ABERTURA_INICIAL   210.0f
+#define ABERTURA_MIN       140.0f
 
 typedef struct {
     Vector2 posicao;
@@ -20,32 +20,32 @@ typedef struct {
     float pulo;
     float largura;
     float altura;
-} jogador;
+} Jogador;
 
-typedef struct alga {
+typedef struct Alga {
     float x;
     float abertura_y;
     float abertura;
     int pontuada;
-    struct alga *proximo;
-} alga;
+    struct Alga *proximo;
+} Alga;
 
 typedef struct {
-    alga *algas;
+    Alga *algas;
     int pontos;
     float velocidade;
     float abertura;
-} jogo;
+} Jogo;
 
-/* ---------- jogador ---------- */
+/* ---------- JOGADOR ---------- */
 
-void resetar_jogador(jogador *p) {
+void resetar_jogador(Jogador *p) {
     p->posicao.x = 150.0f;
     p->posicao.y = CHAO / 2.0f;
     p->velocidade_y = 0.0f;
 }
 
-void iniciar_jogador(jogador *p) {
+void iniciar_jogador(Jogador *p) {
     p->gravidade = 0.4f;
     p->pulo = -7.5f;
     p->largura = 50.0f;
@@ -54,7 +54,7 @@ void iniciar_jogador(jogador *p) {
     resetar_jogador(p);
 }
 
-void atualizar_jogador(jogador *p, int pulou) {
+void atualizar_jogador(Jogador *p, int pulou) {
     if (pulou) {
         p->velocidade_y = p->pulo;
     }
@@ -63,26 +63,24 @@ void atualizar_jogador(jogador *p, int pulou) {
     p->posicao.y += p->velocidade_y;
 }
 
-/* caixa de colisao um pouco menor que o polvo, pra ficar justo */
-Rectangle hitbox_jogador(jogador *p) {
-    Rectangle r = {
+// Caixa de colisão levemente reduzida para ser mais justa com o jogador
+Rectangle hitbox_jogador(const Jogador *p) {
+    return (Rectangle){
         p->posicao.x + 10.0f,
         p->posicao.y + 10.0f,
         p->largura - 20.0f,
         p->altura - 20.0f
     };
-
-    return r;
 }
 
-void desenhar_jogador(jogador *p) {
+void desenhar_jogador(const Jogador *p) {
     DrawRectangle((int)p->posicao.x, (int)p->posicao.y,
                   (int)p->largura, (int)p->altura, ORANGE);
 }
 
-/* ---------- algas (lista encadeada) ---------- */
+/* ---------- ALGAS (Lista Encadeada) ---------- */
 
-alga *ultima_alga(alga *cabeca) {
+Alga *ultima_alga(Alga *cabeca) {
     if (cabeca == NULL) return NULL;
 
     while (cabeca->proximo != NULL) {
@@ -92,15 +90,14 @@ alga *ultima_alga(alga *cabeca) {
     return cabeca;
 }
 
-alga *adicionar_alga(jogo *j, float x) {
-    alga *nova = (alga *)malloc(sizeof(alga));
-
+Alga *adicionar_alga(Jogo *j, float x) {
+    Alga *nova = (Alga *)malloc(sizeof(Alga));
     if (nova == NULL) return NULL;
 
     float min_y = 70.0f;
     float max_y = CHAO - j->abertura - 70.0f;
 
-    alga *ultima = ultima_alga(j->algas);
+    Alga *ultima = ultima_alga(j->algas);
     float y;
 
     if (ultima == NULL) {
@@ -127,11 +124,11 @@ alga *adicionar_alga(jogo *j, float x) {
     return nova;
 }
 
-void liberar_algas(jogo *j) {
-    alga *atual = j->algas;
+void liberar_algas(Jogo *j) {
+    Alga *atual = j->algas;
 
     while (atual != NULL) {
-        alga *prox = atual->proximo;
+        Alga *prox = atual->proximo;
         free(atual);
         atual = prox;
     }
@@ -139,42 +136,33 @@ void liberar_algas(jogo *j) {
     j->algas = NULL;
 }
 
-void atualizar_algas(jogo *j) {
-    alga *a;
-
-    for (a = j->algas; a != NULL; a = a->proximo) {
+void atualizar_algas(Jogo *j) {
+    for (Alga *a = j->algas; a != NULL; a = a->proximo) {
         a->x -= j->velocidade;
     }
 
+    // Remove algas que já saíram da tela pela esquerda
     while (j->algas != NULL && j->algas->x + LARG_ALGA < 0) {
-        alga *remover = j->algas;
+        Alga *remover = j->algas;
         j->algas = remover->proximo;
         free(remover);
     }
 
-    alga *ultima = ultima_alga(j->algas);
+    // Adiciona novas algas conforme necessário à direita
+    Alga *ultima = ultima_alga(j->algas);
 
     while (ultima == NULL || ultima->x < LARGURA) {
-        float x;
+        float x = (ultima == NULL) ? (float)LARGURA : ultima->x + ESPACO_ALGAS;
 
-        if (ultima == NULL) {
-            x = (float)LARGURA;
-        } else {
-            x = ultima->x + ESPACO_ALGAS;
-        }
-
-        alga *nova = adicionar_alga(j, x);
-
+        Alga *nova = adicionar_alga(j, x);
         if (nova == NULL) break;
 
         ultima = nova;
     }
 }
 
-void desenhar_algas(jogo *j) {
-    alga *a;
-
-    for (a = j->algas; a != NULL; a = a->proximo) {
+void desenhar_algas(const Jogo *j) {
+    for (Alga *a = j->algas; a != NULL; a = a->proximo) {
         float base = a->abertura_y + a->abertura;
 
         DrawRectangle((int)a->x, 0, (int)LARG_ALGA, (int)a->abertura_y, GREEN);
@@ -182,17 +170,17 @@ void desenhar_algas(jogo *j) {
     }
 }
 
-/* ---------- jogo ---------- */
+/* ---------- JOGO ---------- */
 
-void iniciar_jogo(jogo *j) {
+void iniciar_jogo(Jogo *j) {
     j->algas = NULL;
 }
 
-void fim_de_jogo(jogo *j) {
+void fim_de_jogo(Jogo *j) {
     liberar_algas(j);
 }
 
-void resetar_jogo(jogo *j, jogador *p) {
+void resetar_jogo(Jogo *j, Jogador *p) {
     liberar_algas(j);
 
     j->pontos = 0;
@@ -203,11 +191,9 @@ void resetar_jogo(jogo *j, jogador *p) {
     atualizar_algas(j);
 }
 
-/* retorna 1 se o polvo encostou em alguma alga */
-int colidir(jogo *j, Rectangle hit) {
-    alga *a;
-
-    for (a = j->algas; a != NULL; a = a->proximo) {
+// Retorna 1 se o polvo encostou em alguma alga
+int colidir(const Jogo *j, Rectangle hit) {
+    for (Alga *a = j->algas; a != NULL; a = a->proximo) {
         float base = a->abertura_y + a->abertura;
 
         Rectangle cima = { a->x, 0.0f, LARG_ALGA, a->abertura_y };
@@ -221,27 +207,23 @@ int colidir(jogo *j, Rectangle hit) {
     return 0;
 }
 
-/* roda um frame da partida, retorna 1 se o polvo morreu */
-int atualizar_jogo(jogo *j, jogador *p, int pulou) {
-    alga *a;
-
+// Roda um frame da partida; retorna 1 se o jogador morreu
+int atualizar_jogo(Jogo *j, Jogador *p, int pulou) {
     atualizar_jogador(p, pulou);
     atualizar_algas(j);
 
-    /* passou da alga: ganha ponto e o jogo fica mais dificil */
-    for (a = j->algas; a != NULL; a = a->proximo) {
+    // Sistema de pontuação e aumento progressivo de dificuldade
+    for (Alga *a = j->algas; a != NULL; a = a->proximo) {
         if (!a->pontuada && a->x + LARG_ALGA < p->posicao.x) {
             a->pontuada = 1;
             j->pontos++;
 
             j->velocidade = VEL_INICIAL + j->pontos * 0.2f;
-
             if (j->velocidade > VEL_MAX) {
                 j->velocidade = VEL_MAX;
             }
 
             j->abertura = ABERTURA_INICIAL - j->pontos * 2.5f;
-
             if (j->abertura < ABERTURA_MIN) {
                 j->abertura = ABERTURA_MIN;
             }
@@ -250,6 +232,7 @@ int atualizar_jogo(jogo *j, jogador *p, int pulou) {
 
     Rectangle hit = hitbox_jogador(p);
 
+    // Verifica colisão com o chão ou teto
     if (hit.y < 0 || hit.y + hit.height > CHAO) {
         return 1;
     }
@@ -261,8 +244,8 @@ int main(void) {
     InitWindow(LARGURA, ALTURA, "Polvo Pirata");
     SetTargetFPS(60);
 
-    jogador polvo;
-    jogo partida;
+    Jogador polvo;
+    Jogo partida;
 
     iniciar_jogador(&polvo);
     iniciar_jogo(&partida);
@@ -288,6 +271,7 @@ int main(void) {
 
         BeginDrawing();
             ClearBackground(SKYBLUE);
+
             desenhar_algas(&partida);
             desenhar_jogador(&polvo);
 
@@ -295,13 +279,4 @@ int main(void) {
 
             if (morreu) {
                 DrawText("GAME OVER", 280, 250, 50, RED);
-                DrawText("Pressione R para reiniciar", 270, 320, 22, DARKGRAY);
-            }
-        EndDrawing();
-    }
-
-    fim_de_jogo(&partida);
-    CloseWindow();
-
-    return 0;
-}
+                DrawText("Pressione R para reiniciar",
