@@ -16,7 +16,7 @@
 
 #define RAIO_OURO 14.0f
 #define VALOR_OURO 5
-#define DESVIO_OURO 150   
+#define DESVIO_OURO 175   
 
 #define VEL_INICIAL 3.0f
 #define VEL_MAX 7.5f
