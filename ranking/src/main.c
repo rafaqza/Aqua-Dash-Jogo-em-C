@@ -278,5 +278,13 @@ int main(void) {
             DrawText(TextFormat("Pontos: %d", partida.pontos), 20, 15, 30, WHITE);
 
             if (morreu) {
-                DrawText("GAME OVER", 280, 250, 50, RED);
-                DrawText("Pressione R para reiniciar",
+            DrawText("GAME OVER", 260, 250, 50, RED);
+            DrawText("Pressione R para reiniciar", 250, 310, 20, DARKGRAY);
+        }
+
+        EndDrawing();
+    }
+
+    CloseWindow();
+    return 0;
+}
