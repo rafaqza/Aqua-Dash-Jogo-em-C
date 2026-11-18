@@ -555,7 +555,7 @@ int atualizar_jogo(jogo *j, jogador *p, int pulou) {
 }
 
 int main(void) {
-    InitWindow(LARGURA, ALTURA, "Polvo Pirata");
+    InitWindow(LARGURA, ALTURA, "AquaDash");
     SetTargetFPS(60);
 
     jogador polvo;
