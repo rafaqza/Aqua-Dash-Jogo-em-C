@@ -1,11 +1,11 @@
 # Aqua-Dash
-AquaDash é um jogo desenvolvido em C com a bilboteca ray-lib executado em uma janela gráfica, inspirado na mecânica de Flappy Bird. Nele, o jogador controla um polvo pirata que precisa nadar pelo fundo do oceano, desviando de algas marinhas para sobreviver e acumular a maior quantidade de pontos possível.
+AquaDash é um jogo desenvolvido em C com a bilboteca ray-lib executado em uma janela gráfica, inspirado na mecânica de Flappy Bird. Nele, o jogador controla um polvo ou tubarão pirata que precisa nadar pelo fundo do oceano, desviando de algas marinhas para sobreviver e acumular a maior quantidade de pontos possível.
 
 O jogo se passa em um ambiente submarino, com um cenário composto pelo fundo do oceano e um chão de areia. O objetivo é testar os reflexos e a habilidade do jogador, tentando alcançar a maior pontuação antes de colidir com algum obstáculo.
 
 
 # Objetivo
-O objetivo do jogo é controlar o polvo pirata e atravessar o maior número possível de obstáculos sem colidir com as algas.
+O objetivo do jogo é controlar o personagem pirata e atravessar o maior número possível de obstáculos sem colidir com as algas.
 
 A cada conjunto de algas ultrapassado e tesouro coletado o jogador ganha pontos. Quanto mais tempo conseguir sobreviver, maior será sua pontuação e melhor será sua posição no ranking.
 
@@ -23,4 +23,4 @@ Ao abrir o jogo aparece uma tela de inicio onde o jogador pode apertar "Tab" par
 
 # Videos de Jogabilidade
 
-Link: 
+Link: https://www.youtube.com/watch?v=U_cuZ2RyhL8
